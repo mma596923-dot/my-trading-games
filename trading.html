@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trading Quiz Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Анық көрінетін заманауи қаріптер */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;800&family=Inter:wght@400;500;700&family=Orbitron:wght@700;900&display=swap');
+
+        :root {
+            --bg-deep: #05070a;
+            --neon-green: #00ff88;
+            --neon-red: #ff0055;
+            --glass-bg: rgba(13, 17, 23, 0.96);
+            --grid-color: rgba(0, 255, 136, 0.05);
+        }
+
+        body {
+            /* Негізгі мәтін үшін Inter шрифті (өте анық) */
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-deep);
+            color: #e1f5e8;
+            margin: 0;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                linear-gradient(var(--grid-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Тақырыптар үшін Montserrat немесе Orbitron */
+        h1, .font-tech {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        #question-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        /* Background Chart Layer - High Visibility */
+        #chart-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.8;
+        }
+
+        .terminal-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(0, 255, 136, 0.4);
+            box-shadow: 0 0 50px rgba(0, 0, 0, 1);
+            border-radius: 20px;
+            position: relative;
+            width: 92%;
+            margin: auto;
+            z-index: 20;
+        }
+
+        .btn-neon {
+            background: transparent;
+            border: 2px solid var(--neon-green);
+            color: var(--neon-green);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            padding: 1.2rem;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px var(--neon-green);
+            transition: 0.3s;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-neon:active {
+            background: var(--neon-green);
+            color: #000;
+            box-shadow: 0 0 30px var(--neon-green);
+        }
+
+        .option-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(0, 255, 136, 0.25);
+            padding: 16px 20px;
+            width: 100%;
+            text-align: left;
+            margin-bottom: 12px;
+            font-size: 16px; /* Шрифт өлшемі үлкейтілді */
+            font-weight: 500;
+            border-radius: 12px;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .option-btn:active {
+            transform: scale(0.97);
+        }
+
+        .option-btn.correct { 
+            background: rgba(0, 255, 136, 0.5) !important; 
+            border-color: var(--neon-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+        
+        .option-btn.wrong { 
+            background: rgba(255, 0, 85, 0.5) !important; 
+            border-color: var(--neon-red);
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+        }
+
+        .ticker-bar {
+            height: 40px;
+            background: #000;
+            border-bottom: 2px solid var(--neon-green);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            font-size: 11px;
+            z-index: 100;
+        }
+
+        .ticker-track {
+            display: flex;
+            white-space: nowrap;
+            animation: ticker-move 25s linear infinite;
+        }
+
+        @keyframes ticker-move {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="chart-bg"></canvas>
+
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span class="px-6 font-bold">BTC/USD <span class="text-[#00ff88]">68,432.10 (+2.4%)</span></span>
+            <span class="px-6 font-bold">ETH/USD <span class="text-[#ff0055]">3,842.50 (-1.1%)</span></span>
+            <span class="px-6 font-bold">GOLD/USD <span class="text-[#00ff88]">2,154.20 (+0.1%)</span></span>
+            <span class="px-6 font-bold">TSLA <span class="text-[#ff0055]">175.22 (-4.2%)</span></span>
+            <span class="px-6 font-bold">AAPL <span class="text-[#00ff88]">189.43 (+0.5%)</span></span>
+            <!-- Duplicate -->
+            <span class="px-6 font-bold">BTC/USD <span class="text-[#00ff88]">68,432.10 (+2.4%)</span></span>
+            <span class="px-6 font-bold">ETH/USD <span class="text-[#ff0055]">3,842.50 (-1.1%)</span></span>
+        </div>
+    </div>
+
+    <main class="flex-grow flex items-center justify-center p-4 relative">
+        
+        <!-- Welcome Screen -->
+        <div id="start-screen" class="terminal-panel p-10 text-center">
+            <h1 class="text-3xl font-black mb-4 text-white uppercase">Trading Quiz</h1>
+            <p class="text-[#00ff88] text-sm leading-relaxed mb-12 font-bold">Трейдинг терминдері бойынша біліміңізді сынап көріңіз.</p>
+            <button onclick="startQuiz()" class="btn-neon w-full rounded-full">СТАРТ</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden w-full flex flex-col h-full justify-center">
+            <div class="flex justify-between items-end mb-4 px-4">
+                <div id="question-counter" class="text-xl text-white font-tech font-bold">01 / 15</div>
+                <div id="timer-text" class="text-xl text-[#00ff88] font-tech font-bold">30.0s</div>
+            </div>
+            <div class="terminal-panel p-6 py-8">
+                <h2 id="question-text" class="text-xl font-bold mb-8 text-white text-center">...</h2>
+                <div id="options-container"></div>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden terminal-panel p-10 text-center">
+            <h2 class="text-[#00ff88] text-xs tracking-widest mb-4 uppercase font-bold">Нәтиже</h2>
+            <div class="text-6xl font-black text-white mb-8 font-tech" id="final-score">0%</div>
+            <button onclick="restartQuiz()" class="btn-neon w-full rounded-full">ҚАЙТАЛАУ</button>
+        </div>
+
+    </main>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSfx(freq, dur) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(); osc.stop(audioCtx.currentTime + dur);
+            } catch(e) {}
+        }
+
+        const questions = [
+            { q: "EPS (Earnings Per Share) дегеніміз не?", a: ["Бір акцияға шаққандағы таза пайда", "Акцияның нарықтық құны", "Компанияның жалпы қарызы", "Дивиденд мөлшері"], correct: 0 },
+            { q: "RSI индикаторы 70-тен жоғары болса, бұл не?", a: ["Overbought (Артық сатып алынған)", "Oversold (Артық сатылған)", "Жаңа тренд басы", "Өтімділік жоқ"], correct: 0 },
+            { q: "Support (Қолдау) деңгейі дегеніміз не?", a: ["Сатып алушылар шоғырланған баға аймағы", "Бағаның ең жоғарғы нүктесі", "Трендтің өзгеру сигналы", "Жаңалықтар аймағы"], correct: 0 },
+            { q: "ФРЖ мөлшерлемені көтергенде нарықта не болады?", a: ["Доллар күшейеді, акцияларға қысым артады", "Акциялар бірден өседі", "Инфляция күрт көтеріледі", "Ештеңе өзгермейді"], correct: 0 },
+            { q: "MACD индикаторының негізгі қызметі қандай?", a: ["Тренд бағыты мен күшін анықтау", "Компания табысын есептеу", "Тек көлемді көрсету", "Фибоначчи салу"], correct: 0 },
+            { q: "Liquidity Sweep деген не?", a: ["Стоп-лостарды жинау үшін деңгейден асып қайту", "Нарықтан ақша шығуы", "Жаңа акция шығару", "Демалыс күнгі жағдай"], correct: 0 },
+            { q: "Жапон шамдарында 'Doji' нені білдіреді?", a: ["Нарықтағы белгісіздік (теңдік)", "Күшті өсу сигналы", "Күшті құлау сигналы", "Сауданың тоқтауы"], correct: 0 },
+            { q: "Breakout (Бұзып өту) дегеніміз не?", a: ["Бағаның маңызды деңгейден асып кетуі", "Бағаның бір орында тұруы", "Бағаның құлауы", "Сауда сессиясының жабылуы"], correct: 0 },
+            { q: "FCF (Free Cash Flow) инвестор үшін неге маңызды?", a: ["Дивиденд немесе қарызды жабу мүмкіндігін көрсетеді", "Акция өсуін кепілдейді", "Салықты есептеу үшін керек", "Банкроттық белгісі"], correct: 0 },
+            { q: "CPI (Consumer Price Index) нарыққа қалай әсер етеді?", a: ["Инфляцияны және ФРЖ мөлшерлемесін анықтайды", "Тек алтын бағасын білдіреді", "Компания табысын көрсетеді", "Экспорт көлемі"], correct: 0 },
+            { q: "Pullback (Түзету) термині нені білдіреді?", a: ["Трендке қарсы қысқа мерзімді кері қозғалыс", "Трендтің толық тоқтауы", "Баға бос аралығы (Gap)", "Жылдам өсу"], correct: 0 },
+            { q: "Институционал инвесторларға кімдер жатады?", a: ["Зейнетақы және хедж-қорлар", "Жеке трейдерлер", "Мемлекеттік органдар", "Брокерлер"], correct: 0 },
+            { q: "Higher High (HH) қашан түзіледі?", a: ["Баға алдыңғы шыңнан жоғары көтерілгенде", "Төмендеу трендінде", "Бүйірлік қозғалыста", "Тек түнде"], correct: 0 },
+            { q: "Bullish Trend кезінде график қалай көрінеді?", a: ["Баға жоғары қарай бағытталады", "Баға төмен қарай құлайды", "Баға түзу сызықпен жүреді", "Мүлдем қозғалмайды"], correct: 0 },
+            { q: "Resistance (Қарсылық) деңгейінде трейдерлер не іздейді?", a: ["Сатуға (Short) мүмкіндік", "Сатып алуды көбейту", "Ешқандай әрекет", "Брокерді ауыстыру"], correct: 0 }
+        ];
+
+        let currentIndex = 0, score = 0, timeLeft = 30, timer;
+
+        function startQuiz() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            timeLeft = 30;
+            const q = questions[currentIndex];
+            document.getElementById('question-counter').innerText = `${String(currentIndex + 1).padStart(2, '0')} / 15`;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+
+            let options = q.a.map((text, index) => ({ text, isCorrect: index === q.correct }));
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.text;
+                btn.onclick = () => handleAnswer(btn, opt.isCorrect);
+                container.appendChild(btn);
+            });
+
+            clearInterval(timer);
+            timer = setInterval(() => {
+                timeLeft -= 0.1;
+                document.getElementById('timer-text').innerText = timeLeft.toFixed(1) + 's';
+                if(timeLeft <= 0) handleAnswer(null, false);
+            }, 100);
+        }
+
+        function handleAnswer(btn, isCorrect) {
+            clearInterval(timer);
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(isCorrect) {
+                if(btn) btn.classList.add('correct');
+                score++; playSfx(800, 0.2);
+            } else {
+                if(btn) btn.classList.add('wrong');
+                playSfx(200, 0.3);
+                const q = questions[currentIndex];
+                btns.forEach(b => { if(b.innerText === q.a[q.correct]) b.classList.add('correct'); });
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                if(currentIndex < questions.length) showQuestion();
+                else showResults();
+            }, 1200);
+        }
+
+        function showResults() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            document.getElementById('final-score').innerText = Math.round((score/15)*100) + '%';
+        }
+
+        function restartQuiz() {
+            currentIndex = 0; score = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            startQuiz();
+        }
+
+        const canvas = document.getElementById('chart-bg');
+        const ctx = canvas.getContext('2d');
+        let candles = [];
+
+        function init() {
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight;
+            candles = [];
+            const count = 15;
+            const spacing = canvas.width / count;
+            for(let i=0; i<count; i++) {
+                candles.push({
+                    x: i * spacing,
+                    y: Math.random() * (canvas.height * 0.5) + (canvas.height * 0.25),
+                    w: spacing * 0.45,
+                    h: (Math.random() * 260) - 130,
+                    isUp: Math.random() > 0.5,
+                    speed: 1.2 + Math.random() * 0.8
+                });
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            candles.forEach(c => {
+                const color = c.isUp ? '#00ff88' : '#ff0055';
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(c.x + c.w/2, c.y - 30);
+                ctx.lineTo(c.x + c.w/2, c.y + c.h + 30);
+                ctx.stroke();
+                ctx.fillStyle = color;
+                ctx.globalAlpha = 0.6;
+                ctx.fillRect(c.x, c.y, c.w, c.h);
+                ctx.globalAlpha = 1.0;
+                ctx.strokeRect(c.x, c.y, c.w, c.h);
+                c.x -= c.speed;
+                if(c.x < -c.w - 50) {
+                    c.x = canvas.width + 50;
+                    c.y = Math.random() * (canvas.height * 0.5) + (canvas.height * 0.25);
+                    c.isUp = Math.random() > 0.5;
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = () => { init(); animate(); };
+        window.onresize = init;
+    </script>
+</body>
+</html>
